@@ -1,0 +1,177 @@
+@page "/"
+@rendermode InteractiveServer
+@inject ProjectDatabase.Services.ProjectService ProjectService
+@using ProjectDatabase.Models
+@using ProjectDatabase.Utilities
+
+<h3>Projects</h3>
+
+<div class="row">
+    <div class="col-6">
+        <h4>Create / Edit</h4>
+        <EditForm Model="model" OnValidSubmit="Save" FormName="formModel">
+            <InputText class="form-control mb-2" @bind-Value="model.Name" placeholder="Name" />
+            <InputText class="form-control mb-2" @bind-Value="model.Employer" placeholder="Employer" />
+            <InputSelect class="form-select mb-2" @bind-Value="model.Language">
+                <option value="">-- select language --</option>
+                @foreach (var l in Tech.Languages)
+                {
+                    <option value="@l">@l</option>
+                }
+            </InputSelect>
+
+            <InputSelect class="form-select mb-2" @bind-Value="model.BackendFramework">
+                <option value="">-- select backend --</option>
+                @foreach(var l in Tech.BackendFrameworks(model.Language))
+                {
+                    <option value="@l">@l</option>
+                }
+            </InputSelect>
+
+            <InputSelect class="form-select mb-2" @bind-Value="model.Database">
+                <option value="">-- select database --</option>
+                @foreach(var l in Tech.Databases)
+                {
+                    <option value="@l">@l</option>
+                }
+            </InputSelect>
+
+            <InputSelect class="form-select mb-2" @bind-Value="model.DataAbstractionLayer">
+                <option value="">-- select data abstraction layer --</option>
+                @foreach(var l in Tech.DataAbstractionLayers)
+                {
+                    <option value="@l">@l</option>
+                }
+            </InputSelect>
+
+            <InputSelect class="form-select mb-2" @bind-Value="model.CloudProvider">
+                <option value="">-- select cloud provider --</option>
+                @foreach(var l in Tech.CloudProviders)
+                {
+                    <option value="@l">@l</option>
+                }
+            </InputSelect>
+
+            <InputSelect class="form-select mb-2" @bind-Value="model.FrontendFramework">
+                <option value="">-- select frontend --</option>
+                @foreach(var l in Tech.FrontendFrameworks)
+                {
+                    <option value="@l">@l</option>
+                }
+            </InputSelect>
+
+            <InputSelect class="form-select mb-2" @bind-Value="model.DevOpsTool">
+                <option value="">-- select devops tool --</option>
+                @foreach(var l in Tech.DevOpsTools)
+                {
+                    <option value="@l">@l</option>
+                }
+            </InputSelect>
+
+            <InputSelect class="form-select mb-2" @bind-Value="model.MobileFramework">
+                <option value="">-- select mobile framework --</option>
+                @foreach(var l in Tech.MobileFrameworks)
+                {
+                    <option value="@l">@l</option>
+                }
+            </InputSelect>
+
+            <InputSelect class="form-select mb-2" @bind-Value="model.UIFramework">
+                <option value="">-- select ui framework --</option>
+                @foreach(var l in Tech.UIFrameworks)
+                {
+                    <option value="@l">@l</option>
+                }
+            </InputSelect>
+
+            <InputSelect class="form-select mb-2" @bind-Value="model.FormFramework">
+                <option value="">-- select form framework --</option>
+                @foreach(var l in Tech.FormFrameworks)
+                {
+                    <option value="@l">@l</option>
+                }
+            </InputSelect>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" type="submit">Save</button>
+                <button class="btn btn-secondary" type="button" @onclick="Reset">New</button>
+            </div>
+        </EditForm>
+    </div>
+
+    <div class="col-6">
+        <h4>Existing</h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Employer</th>
+                    <th>Language</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var p in projects)
+                {
+                    <tr>
+                        <td>@p.Name</td>
+                        <td>@p.Employer</td>
+                        <td>@p.Language</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => Edit(p.Id)">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(p.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private List<Project> projects = new();
+    private Project model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        projects = await ProjectService.GetAllAsync();
+    }
+
+    private async Task Save()
+    {
+        if (model.Id == 0)
+        {
+            await ProjectService.CreateAsync(model);
+        }
+        else
+        {
+            await ProjectService.UpdateAsync(model);
+        }
+
+        model = new Project();
+        await Load();
+    }
+
+    private void Reset()
+    {
+        model = new Project();
+    }
+
+    private async Task Edit(int id)
+    {
+        var p = await ProjectService.GetByIdAsync(id);
+        if (p is not null)
+            model = p;
+    }
+
+    private async Task Delete(int id)
+    {
+        await ProjectService.DeleteAsync(id);
+        await Load();
+    }
+}
